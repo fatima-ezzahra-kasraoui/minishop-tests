@@ -116,3 +116,18 @@ Le déclenchement entre dépôts se fait par `repository_dispatch` (type `app-im
 - Les résultats ci-dessus viennent d'**une** exécution locale par mode ; la stabilité sur de nombreuses exécutions n'est pas mesurée.
 - Les cas manuels de `docs/TC-inscription.md` sont des fiches ; leur exécution manuelle n'est pas consignée.
 - Rapports Allure : non mis en place (optionnel).
+
+## Tests et résultats
+
+Les tests automatisés vivent dans le dépôt [minishop-tests](https://github.com/fatima-ezzahra-kasraoui/minishop-tests) (Playwright, TypeScript, CI GitHub Actions).
+
+Exécution du 25 octobre 2026, Chromium, une passe sans relance : 140 tests, **0 échec inattendu** dans les deux modes.
+
+| Type de test | Nombre | `BUGS=off` : passés | `BUGS=on` : passés | `BUGS=on` : échecs attendus (bugs connus) |
+|---|---|---|---|---|
+| E2E | 36 | 36 | 32 | 4 |
+| API | 70 | 70 | 58 | 12 |
+| Sécurité | 34 | 34 | 11 | 23 |
+| **Total** | **140** | **140** | **101** | **39** |
+
+Un « échec attendu » est un test qui vise un défaut volontaire encore actif : Playwright le rapporte comme réussi. Les 8 défauts (BUG-001 à BUG-008) sont tous détectés ; chacun a un rapport dans `minishop-tests/docs/bugs/`.
