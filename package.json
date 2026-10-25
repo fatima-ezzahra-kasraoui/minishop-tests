@@ -1,0 +1,22 @@
+{
+  "name": "minishop-tests",
+  "version": "1.0.0",
+  "description": "Framework de test Playwright (E2E, API, sécurité) pour minishop-app",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "playwright test",
+    "test:chromium": "playwright test --project=chromium",
+    "test:e2e": "playwright test tests/e2e",
+    "test:api": "playwright test tests/api",
+    "test:security": "playwright test tests/security",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit",
+    "evidence": "node scripts/capture-evidence.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}

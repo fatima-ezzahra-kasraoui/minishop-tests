@@ -1,0 +1,14 @@
+# Attendu : 200 avec liste vide. Obtenu : 500 et trace de pile dans le corps.
+
+> GET /api/products?q=(
+
+HTTP 500 Internal Server Error
+connection: keep-alive
+content-length: 1031
+content-type: application/json; charset=utf-8
+date: Sun, 25 Oct 2026 00:11:32 GMT
+etag: W/"407-r/Zy9SaJ5ArFCsecF0l/oXYOR2E"
+keep-alive: timeout=5
+x-powered-by: Express
+
+{"code":"INTERNAL_ERROR","message":"Erreur interne du serveur.","stack":"SyntaxError: Invalid regular expression: /(/i: Unterminated group\n    at new RegExp (<anonymous>)\n    at /home/claude/minishop-app/src/routes/products.js:34:21\n    at Layer.handle [as handle_request] (/home/claude/minishop-app/node_modules/express/lib/router/layer.js:95:5)\n    at next (/home/claude/minishop-app/node_modules/express/lib/router/route.js:149:13)\n    at Route.dispatch (/home/claude/minishop-app/node_modules/express/lib/router/route.js:119:3)\n    at Layer.handle [as handle_request] (/home/claude/minishop-app/node_modules/express/lib/router/layer.js:95:5)\n    at /home/claude/minishop-app/node_modules/express/lib/router/index.js:284:15\n    at Function.process_params (/home/claude/minishop-app/node_modules/express/lib/router/index.js:346:12)\n    at next (/home/claude/minishop-app/node_modules/express/lib/router/index.js:280:10)\n    at Function.handle (/home/claude/minishop-app/node_modules/express/lib/router/index.js:175:3)"}

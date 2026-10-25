@@ -1,0 +1,76 @@
+name: Playwright
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      app_image:
+        description: "Image de l'application (laisser vide pour utiliser la variable APP_IMAGE ou la valeur par défaut)"
+        required: false
+  # Relance les tests quand l'image de l'application change (dépôt minishop-app).
+  repository_dispatch:
+    types: [app-image-published]
+
+permissions:
+  contents: read
+
+env:
+  # Image publiée par le dépôt minishop-app.
+  # À adapter : remplacer <utilisateur> ou définir la variable de dépôt APP_IMAGE.
+  APP_IMAGE: ${{ inputs.app_image || vars.APP_IMAGE || format('ghcr.io/{0}/minishop-app:latest', github.repository_owner) }}
+
+jobs:
+  test:
+    name: Tests (BUGS=${{ matrix.bugs }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false # un mode qui échoue ne masque pas l'autre
+      matrix:
+        bugs: ['off', 'on']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Installer Chromium
+        run: npx playwright install --with-deps chromium
+
+      # Un conteneur lancé à la main plutôt que « services: » : la variable BUGS
+      # doit prendre la valeur de la matrice et un service ne peut pas la lire de façon fiable.
+      - name: Démarrer l'application (BUGS=${{ matrix.bugs }})
+        run: |
+          docker run -d --name minishop -p 3000:3000 -e BUGS=${{ matrix.bugs }} "$APP_IMAGE"
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/api/health; then echo; exit 0; fi
+            sleep 1
+          done
+          echo "L'application ne répond pas sur le port 3000" >&2
+          docker logs minishop
+          exit 1
+
+      - name: Lancer la suite
+        run: npx playwright test --project=chromium
+        env:
+          BUGS: ${{ matrix.bugs }}
+          BASE_URL: http://localhost:3000
+
+      - name: Journaux de l'application
+        if: failure()
+        run: docker logs minishop
+
+      - name: Publier le rapport HTML
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-bugs-${{ matrix.bugs }}
+          path: playwright-report/
+          retention-days: 14

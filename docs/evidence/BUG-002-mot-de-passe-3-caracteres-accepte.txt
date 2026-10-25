@@ -1,0 +1,14 @@
+# Attendu : 400 PASSWORD_LENGTH. Obtenu : le compte est créé.
+
+> POST /api/register  {"email":"bug002.iyh154bc@minishop-tests.example.com","password":"abc"}
+
+HTTP 201 Created
+connection: keep-alive
+content-length: 63
+content-type: application/json; charset=utf-8
+date: Sun, 25 Oct 2026 00:11:31 GMT
+etag: W/"3f-wUKQNePajGzFf0D2nbutL33q33Q"
+keep-alive: timeout=5
+x-powered-by: Express
+
+{"id":209,"email":"bug002.iyh154bc@minishop-tests.example.com"}
