@@ -1,6 +1,6 @@
 # minishop-tests
 
-Framework de test automatisé (Playwright, TypeScript) pour [`minishop-app`](../minishop-app) : E2E, API et sécurité de premier niveau, avec Page Object Model, une CI à deux modes et une documentation de test complète.
+Framework de test automatisé (Playwright, TypeScript) pour [`minishop-app`](https://github.com/fatima-ezzahra-kasraoui/-Minishop-app) : E2E, API et sécurité de premier niveau, avec Page Object Model, une CI à deux modes et une documentation de test complète.
 
 ![CI](https://github.com/fatima-ezzahra-kasraoui/minishop-tests/actions/workflows/playwright.yml/badge.svg)
 
