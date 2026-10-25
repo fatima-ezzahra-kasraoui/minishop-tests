@@ -4,7 +4,6 @@ Framework de test automatisé (Playwright, TypeScript) pour [`minishop-app`](htt
 
 ![CI](https://github.com/fatima-ezzahra-kasraoui/minishop-tests/actions/workflows/playwright.yml/badge.svg)
 
-> Remplacer `fatima-ezzahra-kasraoui` par votre identifiant GitHub dans le badge et dans `.github/workflows/playwright.yml` (ou définir la variable de dépôt `APP_IMAGE`).
 
 ## Principe
 
