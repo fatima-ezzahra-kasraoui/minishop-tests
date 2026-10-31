@@ -150,6 +150,8 @@ Dans le rapport Allure du mode `BUGS=on`, l'onglet Behaviors regroupe les tests 
 
 <img src="docs/img/allure-defauts-connus.png" alt="Rapport Allure, onglet Behaviors : l'epic Défauts connus regroupe les 39 tests, un groupe par défaut" width="720">
 
+*Capture d'un rapport généré en local avec cette suite en `BUGS=on` ; le rapport publié sur le site a le même contenu.*
+
 ### Sécurité : OWASP ZAP baseline
 
 | Alertes | `BUGS=off` | `BUGS=on` |
