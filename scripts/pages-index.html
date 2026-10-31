@@ -70,13 +70,13 @@
   </div>
 
   <h2 class="section">Performance (k6)</h2>
-  <p class="lead">Quatre scénarios k6 (smoke, catalogue, authentification, panier) avec un seuil de 500 ms au 95<sup>e</sup> centile.</p>
+  <p class="lead">Quatre scénarios k6 (smoke, catalogue, authentification, panier) avec des seuils sur le 95<sup>e</sup> centile des temps de réponse (de 100 à 250 ms selon le scénario).</p>
 
   <div class="grid">
     <section class="card">
       <span class="tag ok">BUGS=off</span>
       <h2>Application conforme</h2>
-      <p>Bloquant : le job échoue si un seuil est dépassé (p95 &lt; 500 ms, moins de 1 % d'erreurs).</p>
+      <p>Bloquant : le job échoue si un seuil est dépassé (p95 sous 100 à 250 ms, moins de 1 % d'erreurs).</p>
       <a class="btn" href="k6-bugs-off/index.html">Ouvrir le rapport k6</a>
     </section>
 

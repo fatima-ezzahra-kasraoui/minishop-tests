@@ -155,7 +155,7 @@ jobs:
         run: docker logs minishop
 
   # Tests de performance k6 (k6/minishop.js : smoke, catalogue, authentification, panier).
-  # BUGS=off : un seuil dépassé (p95 < 500 ms, moins de 1 % d'erreurs) fait échouer le job.
+  # BUGS=off : un seuil dépassé (p95 sous 100 à 250 ms selon le scénario, moins de 1 % d'erreurs) fait échouer le job.
   # BUGS=on  : informatif, le rapport est produit mais ne bloque pas la CI.
   k6:
     name: k6 (BUGS=${{ matrix.bugs }})

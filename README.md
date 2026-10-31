@@ -174,10 +174,10 @@ Mesures de la CI du 31 octobre 2026 en `BUGS=off` (2 567 requêtes, 0 erreur) :
 
 | Scénario | Charge | p95 mesuré | Seuil |
 |---|---|---|---|
-| `smoke` | 1 utilisateur, 1 parcours complet | 50,6 ms | < 500 ms, aucune erreur |
-| `catalog_load` | jusqu'à 15 utilisateurs (liste et recherche) | 1,1 ms | < 500 ms, moins de 1 % d'erreurs |
-| `auth_load` | 1,5 inscription + 1,5 connexion par seconde | 46,2 ms | < 500 ms, moins de 1 % d'erreurs |
-| `basket_flow` | 3 utilisateurs (ajout, lecture, retrait) | 4,3 ms | < 500 ms, moins de 1 % d'erreurs |
+| `smoke` | 1 utilisateur, 1 parcours complet | 50,6 ms | < 250 ms, aucune erreur |
+| `catalog_load` | jusqu'à 15 utilisateurs (liste et recherche) | 1,1 ms | < 100 ms, moins de 1 % d'erreurs |
+| `auth_load` | 1,5 inscription + 1,5 connexion par seconde | 46,2 ms | < 250 ms, moins de 1 % d'erreurs |
+| `basket_flow` | 3 utilisateurs (ajout, lecture, retrait) | 4,3 ms | < 100 ms, moins de 1 % d'erreurs |
 
 L'authentification est la route la plus coûteuse : le serveur hache les mots de passe avec scrypt de façon synchrone (≈ 60 ms de CPU par appel). Les charges de `auth_load` et `basket_flow` sont calibrées en conséquence.
 
@@ -185,6 +185,6 @@ L'authentification est la route la plus coûteuse : le serveur hache les mots de
 
 - Les tests de sécurité couvrent le premier niveau (validation, contrôle d'accès, authentification, XSS). Le scan ZAP baseline de la CI est passif (il n'attaque pas l'application) et ne remplace ni un test d'intrusion ni un audit.
 - Chromium uniquement ; pas de tests d'accessibilité.
-- Les tests de performance sont une charge légère sur un runner partagé de la CI : ils détectent une régression nette, pas une capacité maximale. Les seuils (500 ms) sont très au-dessus des valeurs mesurées et ne détecteraient qu'une dégradation importante.
+- Les tests de performance sont une charge légère sur un runner partagé de la CI : ils détectent une régression nette, pas une capacité maximale. Les seuils sont fixés à 2 à 5 fois les valeurs mesurées sur la CI (davantage pour le catalogue et le panier) : assez serrés pour détecter une vraie régression, assez larges pour ne pas échouer au hasard sur un runner partagé.
 - La stabilité sur de nombreuses exécutions n'est pas mesurée ; la CI a été exécutée quelques fois sans échec inattendu.
 - Les cas manuels de `docs/TC-inscription.md` sont des fiches ; leur exécution manuelle n'est pas consignée.
