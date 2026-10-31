@@ -13,9 +13,20 @@ export default defineConfig({
   retries: 0, // un test instable doit se voir, pas se faire rejouer en silence
   workers: isCI ? 2 : undefined,
 
+  // Allure écrit ses données brutes dans allure-results/ ; le rapport lisible
+  // est généré ensuite (npm run allure:generate) et publié par la CI sur GitHub Pages.
   reporter: isCI
-    ? [['list'], ['github'], ['html', { open: 'never' }]]
-    : [['list'], ['html', { open: 'never' }]],
+    ? [
+        ['list'],
+        ['github'],
+        ['html', { open: 'never' }],
+        ['allure-playwright', { resultsDir: 'allure-results' }],
+      ]
+    : [
+        ['list'],
+        ['html', { open: 'never' }],
+        ['allure-playwright', { resultsDir: 'allure-results' }],
+      ],
 
   use: {
     baseURL,

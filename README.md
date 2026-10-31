@@ -108,13 +108,19 @@ Le workflow `.github/workflows/playwright.yml` :
 
 Le déclenchement entre dépôts se fait par `repository_dispatch` (type `app-image-published`) ou à la main (`workflow_dispatch`).
 
+## Rapports en ligne
+
+Les rapports Allure des deux modes sont publiés sur GitHub Pages à chaque push sur `main` : <https://fatima-ezzahra-kasraoui.github.io/minishop-tests/>.
+
+En local : `npm test`, puis `npm run allure:generate` et `npm run allure:open`.
+
 ## Limites assumées
 
 - Les tests de sécurité couvrent le premier niveau (validation, contrôle d'accès, authentification, XSS). Ils ne remplacent ni un scan (ZAP, Burp) ni un audit.
 - Chromium uniquement ; pas de tests de performance ni d'accessibilité.
 - Les résultats ci-dessus viennent d'**une** exécution locale par mode ; la stabilité sur de nombreuses exécutions n'est pas mesurée.
 - Les cas manuels de `docs/TC-inscription.md` sont des fiches ; leur exécution manuelle n'est pas consignée.
-- Rapports Allure : non mis en place (optionnel).
+
 
 ## Tests et résultats
 
