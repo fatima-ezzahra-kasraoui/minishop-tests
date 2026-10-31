@@ -74,3 +74,80 @@ jobs:
           name: playwright-report-bugs-${{ matrix.bugs }}
           path: playwright-report/
           retention-days: 14
+
+      # Données brutes Allure : le job « report » en tire le rapport publié sur GitHub Pages.
+      - name: Publier les résultats Allure
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-bugs-${{ matrix.bugs }}
+          path: allure-results/
+          retention-days: 14
+          if-no-files-found: warn
+
+  report:
+    name: Rapport Allure (GitHub Pages)
+    needs: test
+    # Publie même si des tests ont échoué (le rapport sert justement à les voir),
+    # mais jamais depuis une pull request : seul le code de main alimente le site.
+    if: ${{ !cancelled() && github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # allure-commandline (générateur de rapport) a besoin de Java.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - run: npm ci
+
+      - name: Récupérer les résultats Allure des deux modes
+        uses: actions/download-artifact@v4
+        with:
+          pattern: allure-results-bugs-*
+          path: allure-inputs
+
+      - name: Générer les rapports et la page d'accueil
+        run: |
+          mkdir -p site
+          for mode in off on; do
+            src="allure-inputs/allure-results-bugs-${mode}"
+            if [ -d "$src" ] && [ -n "$(ls -A "$src")" ]; then
+              npx allure generate "$src" --clean -o "site/bugs-${mode}"
+            else
+              echo "Aucun résultat Allure pour BUGS=${mode} : rapport ignoré." >&2
+            fi
+          done
+          sed -e "s/__SHA__/${GITHUB_SHA::7}/g" \
+              -e "s/__DATE__/$(date -u +'%d\/%m\/%Y %H:%M UTC')/g" \
+              scripts/pages-index.html > site/index.html
+          touch site/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Déployer sur GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MiniShop – Rapports de test</title>
+  <style>
+    :root { --bg:#f6f7f9; --card:#fff; --text:#1c2430; --muted:#5b6675; --accent:#2457d6; --ok:#17803d; --warn:#b45309; --border:#e2e6ec; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#12161c; --card:#1b212a; --text:#e8ecf2; --muted:#9aa5b4; --accent:#7aa2ff; --ok:#4ade80; --warn:#fbbf24; --border:#2b3441; }
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    main { max-width:820px; margin:0 auto; padding:48px 20px 64px; }
+    h1 { margin:0 0 8px; font-size:1.9rem; }
+    .lead { color:var(--muted); margin:0 0 32px; }
+    .grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:22px; display:flex; flex-direction:column; gap:10px; }
+    .card h2 { margin:0; font-size:1.15rem; }
+    .tag { align-self:flex-start; font-size:.78rem; font-weight:600; padding:2px 10px; border-radius:99px; border:1px solid currentColor; }
+    .tag.ok { color:var(--ok); } .tag.warn { color:var(--warn); }
+    .card p { margin:0; color:var(--muted); font-size:.95rem; }
+    .btn { margin-top:auto; display:inline-block; text-align:center; text-decoration:none; font-weight:600; color:#fff; background:var(--accent); padding:10px 16px; border-radius:8px; }
+    .btn:hover { filter:brightness(1.1); }
+    .btn:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+    @media (prefers-color-scheme: dark) { .btn { color:#0b1020; } }
+    footer { margin-top:32px; color:var(--muted); font-size:.85rem; }
+    a.plain { color:var(--accent); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>MiniShop – Rapports de test</h1>
+  <p class="lead">140 tests Playwright (E2E, API, sécurité) exécutés dans deux modes de l'application. Chaque rapport Allure est consultable directement, sans rien installer.</p>
+
+  <div class="grid">
+    <section class="card">
+      <span class="tag ok">BUGS=off</span>
+      <h2>Application conforme</h2>
+      <p>L'application respecte la spécification : les 140 tests doivent passer.</p>
+      <a class="btn" href="bugs-off/index.html">Ouvrir le rapport</a>
+    </section>
+
+    <section class="card">
+      <span class="tag warn">BUGS=on</span>
+      <h2>8 défauts volontaires</h2>
+      <p>Chaque défaut est détecté par au moins un test. Les échecs attendus (<code>test.fail()</code>) sont comptés comme réussis.</p>
+      <a class="btn" href="bugs-on/index.html">Ouvrir le rapport</a>
+    </section>
+  </div>
+
+  <footer>
+    Généré le __DATE__ · commit <code>__SHA__</code> ·
+    <a class="plain" href="https://github.com/fatima-ezzahra-kasraoui/minishop-tests">code des tests</a> ·
+    <a class="plain" href="https://github.com/fatima-ezzahra-kasraoui/-Minishop-app">code de l'application</a>
+  </footer>
+</main>
+</body>
+</html>
