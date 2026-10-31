@@ -85,9 +85,78 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
 
+  # Scan de sécurité passif OWASP ZAP (baseline) contre l'application réelle, dans les deux modes.
+  # BUGS=off : l'application conforme ne doit déclencher aucune alerte de niveau FAIL.
+  # BUGS=on  : informatif, les failles sont voulues ; le rapport montre ce que ZAP détecte.
+  zap:
+    name: ZAP baseline (BUGS=${{ matrix.bugs }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        bugs: ['off', 'on']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Démarrer l'application (BUGS=${{ matrix.bugs }})
+        run: |
+          docker run -d --name minishop -p 3000:3000 -e BUGS=${{ matrix.bugs }} "$APP_IMAGE"
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/api/health; then echo; exit 0; fi
+            sleep 1
+          done
+          echo "L'application ne répond pas sur le port 3000" >&2
+          docker logs minishop
+          exit 1
+
+      # zap-baseline.py renvoie 0 (propre), 1 (alerte FAIL), 2 (avertissements) ou 3 (erreur ZAP).
+      # Le code est conservé et jugé à l'étape suivante, pour toujours produire le rapport.
+      - name: Scan ZAP baseline
+        run: |
+          mkdir -p zap-out && chmod 777 zap-out
+          set +e
+          docker run --rm --network host \
+            -v "$PWD/zap-out:/zap/wrk:rw" \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://localhost:3000 -j -m 2 -T 10 \
+              -r zap-report.html -J zap-report.json -w zap-report.md
+          echo "ZAP_EXIT=$?" >> "$GITHUB_ENV"
+          exit 0
+
+      - name: Résumé du scan
+        if: ${{ !cancelled() }}
+        run: node scripts/zap-summary.mjs zap-out/zap-report.json "${{ matrix.bugs }}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publier le rapport ZAP
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report-bugs-${{ matrix.bugs }}
+          path: zap-out/
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Appliquer le seuil
+        run: |
+          echo "Code de sortie ZAP : ${ZAP_EXIT} (0 propre, 1 alerte FAIL, 2 avertissements, 3 erreur ZAP)"
+          if [ "${ZAP_EXIT}" = "3" ]; then
+            echo "ZAP a rencontré une erreur : le scan n'est pas fiable." >&2
+            exit 1
+          fi
+          if [ "${{ matrix.bugs }}" = "off" ] && [ "${ZAP_EXIT}" = "1" ]; then
+            echo "L'application conforme (BUGS=off) a déclenché une alerte de niveau FAIL." >&2
+            exit 1
+          fi
+
+      - name: Journaux de l'application
+        if: failure()
+        run: docker logs minishop
+
   report:
     name: Rapport Allure (GitHub Pages)
-    needs: test
+    needs: [test, zap]
     # Publie même si des tests ont échoué (le rapport sert justement à les voir),
     # mais jamais depuis une pull request : seul le code de main alimente le site.
     if: ${{ !cancelled() && github.event_name != 'pull_request' }}
@@ -126,9 +195,24 @@ jobs:
           pattern: allure-results-bugs-*
           path: allure-inputs
 
+      - name: Récupérer les rapports ZAP des deux modes
+        uses: actions/download-artifact@v4
+        with:
+          pattern: zap-report-bugs-*
+          path: zap-inputs
+
       - name: Générer les rapports et la page d'accueil
         run: |
           mkdir -p site
+          for mode in off on; do
+            zap="zap-inputs/zap-report-bugs-${mode}/zap-report.html"
+            if [ -f "$zap" ]; then
+              mkdir -p "site/zap-bugs-${mode}"
+              cp "$zap" "site/zap-bugs-${mode}/index.html"
+            else
+              echo "Aucun rapport ZAP pour BUGS=${mode} : ignoré." >&2
+            fi
+          done
           for mode in off on; do
             src="allure-inputs/allure-results-bugs-${mode}"
             if [ -d "$src" ] && [ -n "$(ls -A "$src")" ]; then
