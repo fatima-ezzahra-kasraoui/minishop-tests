@@ -8,3 +8,4 @@ allure-report/
 .env
 .env.*
 .DS_Store
+k6-out/

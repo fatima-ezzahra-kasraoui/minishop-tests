@@ -112,6 +112,19 @@ Un job `zap` lance en parallèle un scan passif **OWASP ZAP baseline** contre l'
 - `BUGS=on` : informatif, les failles sont voulues ; le rapport montre ce qu'un scan automatique détecte ;
 - le rapport HTML est publié en artefact (`zap-report-bugs-off` et `-on`), un résumé s'affiche dans l'onglet du job, et les rapports sont accessibles depuis le site GitHub Pages.
 
+Un job `k6` lance les tests de performance `k6/minishop.js` dans les deux modes. Quatre scénarios s'enchaînent (≈ 2 minutes) :
+
+| Scénario | Charge | Ce qu'il mesure |
+| --- | --- | --- |
+| `smoke` | 1 utilisateur, 1 parcours | l'application répond, de l'accueil au panier |
+| `catalog_load` | jusqu'à 15 utilisateurs | liste des produits et recherche |
+| `auth_load` | 1,5 inscription + 1,5 connexion par seconde | route la plus coûteuse (hachage scrypt synchrone) |
+| `basket_flow` | 3 utilisateurs | ajout, lecture et retrait d'un article |
+
+Seuils par scénario : 95 % des requêtes sous 500 ms et moins de 1 % d'erreurs (`smoke` : aucune erreur). En `BUGS=off`, un seuil dépassé fait échouer le job ; en `BUGS=on`, le résultat est informatif. Le rapport k6 est publié en artefact (`k6-report-bugs-off` et `-on`) et sur le site GitHub Pages.
+
+En local, avec [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) installé et l'application démarrée : `mkdir -p k6-out && k6 run k6/minishop.js`.
+
 Le déclenchement entre dépôts se fait par `repository_dispatch` (type `app-image-published`) ou à la main (`workflow_dispatch`).
 
 ## Rapports en ligne
@@ -123,7 +136,8 @@ En local : `npm test`, puis `npm run allure:generate` et `npm run allure:open`.
 ## Limites assumées
 
 - Les tests de sécurité couvrent le premier niveau (validation, contrôle d'accès, authentification, XSS). Le scan ZAP baseline de la CI est passif (il n'attaque pas l'application) et ne remplace ni un test d'intrusion ni un audit.
-- Chromium uniquement ; pas de tests de performance ni d'accessibilité.
+- Chromium uniquement ; pas de tests d'accessibilité.
+- Les tests de performance sont une charge légère sur un runner partagé de la CI : ils détectent une régression nette, pas une capacité maximale. Les seuils tiennent compte du hachage scrypt synchrone de l'application.
 - Les résultats ci-dessus viennent d'**une** exécution locale par mode ; la stabilité sur de nombreuses exécutions n'est pas mesurée.
 - Les cas manuels de `docs/TC-inscription.md` sont des fiches ; leur exécution manuelle n'est pas consignée.
 

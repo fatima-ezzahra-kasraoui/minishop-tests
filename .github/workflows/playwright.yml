@@ -154,9 +154,83 @@ jobs:
         if: failure()
         run: docker logs minishop
 
+  # Tests de performance k6 (k6/minishop.js : smoke, catalogue, authentification, panier).
+  # BUGS=off : un seuil dépassé (p95 < 500 ms, moins de 1 % d'erreurs) fait échouer le job.
+  # BUGS=on  : informatif, le rapport est produit mais ne bloque pas la CI.
+  k6:
+    name: k6 (BUGS=${{ matrix.bugs }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        bugs: ['off', 'on']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Démarrer l'application (BUGS=${{ matrix.bugs }})
+        run: |
+          docker run -d --name minishop -p 3000:3000 -e BUGS=${{ matrix.bugs }} "$APP_IMAGE"
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/api/health; then echo; exit 0; fi
+            sleep 1
+          done
+          echo "L'application ne répond pas sur le port 3000" >&2
+          docker logs minishop
+          exit 1
+
+      - uses: grafana/setup-k6-action@v1
+
+      # k6 renvoie 0 (seuils respectés), 99 (seuil dépassé) ou un autre code (erreur de script).
+      # Le code est conservé et jugé à l'étape suivante, pour toujours produire le rapport.
+      - name: Lancer les scénarios k6
+        run: |
+          mkdir -p k6-out
+          set +e
+          K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=k6-out/report.html \
+            k6 run -e BASE_URL=http://localhost:3000 -e MODE=${{ matrix.bugs }} k6/minishop.js
+          echo "K6_EXIT=$?" >> "$GITHUB_ENV"
+          exit 0
+
+      - name: Résumé des mesures
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f k6-out/summary.md ]; then
+            cat k6-out/summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### k6 (BUGS=${{ matrix.bugs }})" >> "$GITHUB_STEP_SUMMARY"
+            echo "Aucun résumé produit : le test n'a pas abouti." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Publier le rapport k6
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-report-bugs-${{ matrix.bugs }}
+          path: k6-out/
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Appliquer le seuil
+        run: |
+          echo "Code de sortie k6 : ${K6_EXIT} (0 seuils respectés, 99 seuil dépassé, autre : erreur)"
+          if [ "${K6_EXIT}" != "0" ] && [ "${K6_EXIT}" != "99" ]; then
+            echo "k6 a rencontré une erreur : le test n'est pas fiable." >&2
+            exit 1
+          fi
+          if [ "${{ matrix.bugs }}" = "off" ] && [ "${K6_EXIT}" = "99" ]; then
+            echo "Un seuil de performance est dépassé sur l'application conforme (BUGS=off)." >&2
+            exit 1
+          fi
+
+      - name: Journaux de l'application
+        if: failure()
+        run: docker logs minishop
+
   report:
     name: Rapport Allure (GitHub Pages)
-    needs: [test, zap]
+    needs: [test, zap, k6]
     # Publie même si des tests ont échoué (le rapport sert justement à les voir),
     # mais jamais depuis une pull request : seul le code de main alimente le site.
     if: ${{ !cancelled() && github.event_name != 'pull_request' }}
@@ -201,9 +275,24 @@ jobs:
           pattern: zap-report-bugs-*
           path: zap-inputs
 
+      - name: Récupérer les rapports k6 des deux modes
+        uses: actions/download-artifact@v4
+        with:
+          pattern: k6-report-bugs-*
+          path: k6-inputs
+
       - name: Générer les rapports et la page d'accueil
         run: |
           mkdir -p site
+          for mode in off on; do
+            k6report="k6-inputs/k6-report-bugs-${mode}/report.html"
+            if [ -f "$k6report" ]; then
+              mkdir -p "site/k6-bugs-${mode}"
+              cp "$k6report" "site/k6-bugs-${mode}/index.html"
+            else
+              echo "Aucun rapport k6 pour BUGS=${mode} : ignoré." >&2
+            fi
+          done
           for mode in off on; do
             zap="zap-inputs/zap-report-bugs-${mode}/zap-report.html"
             if [ -f "$zap" ]; then

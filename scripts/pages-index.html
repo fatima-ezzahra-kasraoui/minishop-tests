@@ -69,6 +69,25 @@
     </section>
   </div>
 
+  <h2 class="section">Performance (k6)</h2>
+  <p class="lead">Quatre scénarios k6 (smoke, catalogue, authentification, panier) avec un seuil de 500 ms au 95<sup>e</sup> centile.</p>
+
+  <div class="grid">
+    <section class="card">
+      <span class="tag ok">BUGS=off</span>
+      <h2>Application conforme</h2>
+      <p>Bloquant : le job échoue si un seuil est dépassé (p95 &lt; 500 ms, moins de 1 % d'erreurs).</p>
+      <a class="btn" href="k6-bugs-off/index.html">Ouvrir le rapport k6</a>
+    </section>
+
+    <section class="card">
+      <span class="tag warn">BUGS=on</span>
+      <h2>Avec défauts volontaires</h2>
+      <p>Informatif : les mêmes scénarios, sans effet sur le résultat de la CI.</p>
+      <a class="btn" href="k6-bugs-on/index.html">Ouvrir le rapport k6</a>
+    </section>
+  </div>
+
   <footer>
     Généré le __DATE__ · commit <code>__SHA__</code> ·
     <a class="plain" href="https://github.com/fatima-ezzahra-kasraoui/minishop-tests">code des tests</a> ·
