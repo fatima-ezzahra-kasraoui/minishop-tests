@@ -60,22 +60,28 @@ export const options = {
     },
   },
 
+  // Seuils fixés à partir des mesures de la CI (31 octobre 2026, runner GitHub) avec une marge
+  // de 2 à 5 fois pour absorber la variabilité d'un runner partagé :
+  //   smoke ≈ 51 ms, catalog_load ≈ 1 ms, auth_load ≈ 46 ms, basket_flow ≈ 4 ms (p95).
+  // Plus bas, le job bloquant échouerait au hasard ; plus haut, il ne détecterait plus
+  // qu'une dégradation énorme.
   thresholds: {
     // smoke : aucune erreur tolérée.
     'checks{scenario:smoke}': ['rate==1'],
     'http_req_failed{scenario:smoke}': ['rate==0'],
-    'http_req_duration{scenario:smoke}': ['p(95)<500'],
+    'http_req_duration{scenario:smoke}': ['p(95)<250'],
 
-    // Charges : 95 % des requêtes sous 500 ms et moins de 1 % d'erreurs.
-    'http_req_duration{scenario:catalog_load}': ['p(95)<500'],
+    // Charges : moins de 1 % d'erreurs, et un p95 propre à chaque scénario.
+    'http_req_duration{scenario:catalog_load}': ['p(95)<100'],
     'http_req_failed{scenario:catalog_load}': ['rate<0.01'],
     'checks{scenario:catalog_load}': ['rate>0.99'],
 
-    'http_req_duration{scenario:auth_load}': ['p(95)<500'],
+    // Authentification : scrypt est synchrone côté serveur, d'où un seuil plus large.
+    'http_req_duration{scenario:auth_load}': ['p(95)<250'],
     'http_req_failed{scenario:auth_load}': ['rate<0.01'],
     'checks{scenario:auth_load}': ['rate>0.99'],
 
-    'http_req_duration{scenario:basket_flow}': ['p(95)<500'],
+    'http_req_duration{scenario:basket_flow}': ['p(95)<100'],
     'http_req_failed{scenario:basket_flow}': ['rate<0.01'],
     'checks{scenario:basket_flow}': ['rate>0.99'],
   },
