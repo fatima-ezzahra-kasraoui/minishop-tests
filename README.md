@@ -106,6 +106,12 @@ Le workflow `.github/workflows/playwright.yml` :
 3. exécute la suite Playwright ;
 4. publie le rapport HTML en artefact (`playwright-report-bugs-off` et `-on`).
 
+Un job `zap` lance en parallèle un scan passif **OWASP ZAP baseline** contre l'application, dans les deux modes :
+
+- `BUGS=off` : le job échoue si ZAP déclenche une alerte de niveau FAIL ;
+- `BUGS=on` : informatif, les failles sont voulues ; le rapport montre ce qu'un scan automatique détecte ;
+- le rapport HTML est publié en artefact (`zap-report-bugs-off` et `-on`), un résumé s'affiche dans l'onglet du job, et les rapports sont accessibles depuis le site GitHub Pages.
+
 Le déclenchement entre dépôts se fait par `repository_dispatch` (type `app-image-published`) ou à la main (`workflow_dispatch`).
 
 ## Rapports en ligne
@@ -116,7 +122,7 @@ En local : `npm test`, puis `npm run allure:generate` et `npm run allure:open`.
 
 ## Limites assumées
 
-- Les tests de sécurité couvrent le premier niveau (validation, contrôle d'accès, authentification, XSS). Ils ne remplacent ni un scan (ZAP, Burp) ni un audit.
+- Les tests de sécurité couvrent le premier niveau (validation, contrôle d'accès, authentification, XSS). Le scan ZAP baseline de la CI est passif (il n'attaque pas l'application) et ne remplace ni un test d'intrusion ni un audit.
 - Chromium uniquement ; pas de tests de performance ni d'accessibilité.
 - Les résultats ci-dessus viennent d'**une** exécution locale par mode ; la stabilité sur de nombreuses exécutions n'est pas mesurée.
 - Les cas manuels de `docs/TC-inscription.md` sont des fiches ; leur exécution manuelle n'est pas consignée.
