@@ -1,4 +1,5 @@
 import { test } from '@playwright/test';
+import { epic, feature, severity, tag } from 'allure-js-commons';
 
 export const KNOWN_BUGS = [
   'BUG-001',
@@ -51,5 +52,38 @@ export function isBugActive(id: BugId): boolean {
  * À appeler en première instruction du test.
  */
 export function expectBug(id: BugId): void {
-  test.fail(isBugActive(id), `${id} : défaut connu, échec attendu tant qu'il est actif`);
+  const active = isBugActive(id);
+  test.fail(active, `${id} : défaut connu, échec attendu tant qu'il est actif`);
+  labelForAllure(id, active);
+}
+
+/** Libellé et sévérité Allure de chaque défaut (cf. tableau du README). */
+const BUG_INFO: Record<BugId, { title: string; severity: 'minor' | 'normal' | 'critical' }> = {
+  'BUG-001': { title: 'compteur du mot de passe affiche /20 au lieu de /40', severity: 'minor' },
+  'BUG-002': { title: 'mot de passe trop court accepté par le serveur', severity: 'normal' },
+  'BUG-003': { title: 'e-mail sans point dans le domaine accepté', severity: 'normal' },
+  'BUG-004': { title: 'panier d\'un autre utilisateur lisible (IDOR)', severity: 'critical' },
+  'BUG-005': { title: 'panier lisible sans jeton', severity: 'critical' },
+  'BUG-006': { title: 'XSS réfléchi dans la recherche', severity: 'critical' },
+  'BUG-007': { title: 'caractère spécial dans la recherche : 500 avec trace de pile', severity: 'normal' },
+  'BUG-008': { title: 'en-têtes de sécurité absents', severity: 'normal' },
+};
+
+/**
+ * Regroupe les tests de défauts dans le rapport Allure (onglet Behaviors) :
+ * epic « Défauts connus », une feature par défaut, sévérité et état du défaut.
+ *
+ * L'API d'Allure est asynchrone, alors que expectBug() reste synchrone pour rester la
+ * première instruction des tests : les appels partent sans être attendus, le temps du
+ * test suffit à les enregistrer. (Les annotations Playwright ne conviennent pas : le
+ * reporter ne les lit qu'au début du test, avant l'appel à expectBug.)
+ */
+function labelForAllure(id: BugId, active: boolean): void {
+  const info = BUG_INFO[id];
+  void Promise.all([
+    epic('Défauts connus'),
+    feature(`${id} · ${info.title}`),
+    severity(info.severity),
+    tag(active ? 'défaut actif' : 'défaut inactif'),
+  ]).catch(() => undefined);
 }
